@@ -18,31 +18,12 @@ Search the web for real-time information using the Brave Search API.
 
 ```python
 import os
-import json
 import requests
-from pathlib import Path
 from typing import Optional
 
 
 def get_brave_api_key() -> str:
-    """Get Brave Search API key from TOOLS.md or environment."""
-    # Try TOOLS.md first
-    tools_path = Path("TOOLS.md")
-    if tools_path.exists():
-        content = tools_path.read_text(encoding="utf-8")
-        
-        for line in content.split('\n'):
-            line_lower = line.lower()
-            if 'brave' in line_lower and ('api' in line_lower or 'key' in line_lower):
-                # Extract key from line like "BRAVE_API_KEY: xxx"
-                if ':' in line:
-                    key = line.split(':', 1)[1].strip()
-                    if key.startswith('`') and key.endswith('`'):
-                        key = key[1:-1]
-                    if key and len(key) > 10:
-                        return key
-    
-    # Fall back to environment variable
+    """Get Brave Search API key from environment variable."""
     return os.environ.get("BRAVE_API_KEY", "")
 
 
@@ -67,7 +48,7 @@ def execute(
     api_key = get_brave_api_key()
     
     if not api_key:
-        return "Error: Brave Search API key not configured. Add BRAVE_API_KEY to TOOLS.md or environment."
+        return "Error: BRAVE_API_KEY environment variable not configured."
     
     # Validate count
     count = max(1, min(20, count))

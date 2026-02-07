@@ -34,6 +34,11 @@ services:
       # Default provider (gemini or anthropic)
       - DEFAULT_LLM_PROVIDER=${DEFAULT_LLM_PROVIDER:-gemini}
       
+      # Skill API keys
+      - BRAVE_API_KEY=${BRAVE_API_KEY:-}
+      - HA_URL=${HA_URL:-}
+      - HA_TOKEN=${HA_TOKEN:-}
+      
       # Personality files location
       - SOUL_FILE=/app/personality/SOUL.md
       - IDENTITY_FILE=/app/personality/IDENTITY.md
@@ -41,7 +46,7 @@ services:
       - TOOLS_FILE=/app/personality/TOOLS.md
     
     volumes:
-      # Persist data (ChromaDB, state)
+      # Persist data (state, conversation history)
       - tele-agent-data:/app/data
       
       # Mount personality files

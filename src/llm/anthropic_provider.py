@@ -184,14 +184,22 @@ class AnthropicProvider(LLMProvider):
         anthropic_tools = [tool.to_anthropic_format() for tool in tools]
         
         try:
-            response = await client.messages.create(
-                model=self._model,
-                max_tokens=max_tokens or 4096,
-                system=system_prompt if system_prompt else None,
-                messages=anthropic_messages,
-                tools=anthropic_tools if anthropic_tools else None,
-                temperature=temperature,
-            )
+            # Build API call kwargs
+            api_kwargs = {
+                "model": self._model,
+                "max_tokens": max_tokens or 4096,
+                "messages": anthropic_messages,
+                "temperature": temperature,
+            }
+            
+            if system_prompt:
+                api_kwargs["system"] = system_prompt
+            
+            # Only include tools if we have any (Anthropic API doesn't like empty tools)
+            if anthropic_tools:
+                api_kwargs["tools"] = anthropic_tools
+            
+            response = await client.messages.create(**api_kwargs)
             
             # Track usage
             if hasattr(response, 'usage'):

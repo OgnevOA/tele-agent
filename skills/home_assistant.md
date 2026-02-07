@@ -20,49 +20,18 @@ Control your smart home via Home Assistant's REST API.
 
 ```python
 import os
-import json
 import requests
-from pathlib import Path
 from typing import Optional, Any
 
 
 def get_ha_config() -> tuple[str, str]:
-    """Get Home Assistant URL and token from TOOLS.md or environment."""
-    # Try TOOLS.md first
-    tools_path = Path("TOOLS.md")
-    if tools_path.exists():
-        content = tools_path.read_text(encoding="utf-8")
-        
-        # Parse TOOLS.md for HA config
-        url = None
-        token = None
-        
-        for line in content.split('\n'):
-            line_lower = line.lower()
-            if 'ha_url' in line_lower or 'home assistant url' in line_lower:
-                # Extract URL from line like "HA_URL: http://..."
-                if ':' in line:
-                    url = line.split(':', 1)[1].strip()
-                    if url.startswith('`') and url.endswith('`'):
-                        url = url[1:-1]
-            elif 'ha_token' in line_lower or 'home assistant token' in line_lower:
-                if ':' in line:
-                    token = line.split(':', 1)[1].strip()
-                    if token.startswith('`') and token.endswith('`'):
-                        token = token[1:-1]
-        
-        if url and token:
-            return url.rstrip('/'), token
-    
-    # Fallback to environment variables
+    """Get Home Assistant URL and token from environment variables."""
     url = os.environ.get("HA_URL", "")
     token = os.environ.get("HA_TOKEN", "")
     
     if not url or not token:
         raise ValueError(
-            "Home Assistant not configured. Add to TOOLS.md:\n"
-            "HA_URL: http://your-ha-instance:8123\n"
-            "HA_TOKEN: your-long-lived-access-token"
+            "Home Assistant not configured. Set HA_URL and HA_TOKEN environment variables."
         )
     
     return url.rstrip('/'), token
@@ -92,7 +61,7 @@ def ha_request(
     )
     
     if response.status_code == 401:
-        raise ValueError("Invalid Home Assistant token. Check your token in TOOLS.md")
+        raise ValueError("Invalid Home Assistant token. Check your HA_TOKEN environment variable.")
     elif response.status_code == 404:
         raise ValueError(f"Endpoint not found: {endpoint}")
     

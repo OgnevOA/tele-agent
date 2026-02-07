@@ -1,23 +1,35 @@
 # Your Environment
 
-Configure your AI's access to external services here.
-
-### Home Assistant
-HA_URL: http://your-home-assistant:8123/
-HA_TOKEN: your_long_lived_access_token
+This file describes your smart home setup and available devices.
+API keys and tokens should be set as environment variables, not here!
 
 ### Smart Home Devices
-(List your devices with their entity IDs)
+(List your devices with their entity IDs for Home Assistant)
+
+#### Switches (Sonoff)
+- **Office Light:** switch.sonoff_office
+- **Bedroom Light:** switch.sonoff_bedroom
+- **Living Room Light:** switch.sonoff_living_room
 
 #### Lights
-- **Living Room:** light.living_room
-- **Bedroom:** light.bedroom
+- **Kitchen Light:** light.kitchen
 
-#### Switches
-- **Office Light:** switch.office_light
+#### Climate Control (AC Units)
+- **Office AC:** climate.office_ac
+- **Living Room AC:** climate.living_room_ac
+- **Bedroom AC:** climate.bedroom_ac
 
-#### Climate
-- **Main AC:** climate.main_ac
+#### Boiler
+- **Water Heater:** switch.boiler
 
-### Other Integrations
-(Add any other service credentials your AI needs)
+### Media
+- **Apple TV:** media_player.apple_tv
+- **Remote:** remote.apple_tv
+- **Turn on TV:** script.turn_on_tv
+- **Turn off TV:** script.turn_off_tv
+
+### Environment Variables to Set
+The following should be configured as environment variables:
+- BRAVE_API_KEY (for web search)
+- HA_URL (Home Assistant URL, e.g., http://192.168.1.100:8123)
+- HA_TOKEN (Home Assistant long-lived access token)

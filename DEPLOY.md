@@ -42,10 +42,11 @@ The container image is automatically built and pushed to GitHub Container Regist
    | `TELEGRAM_BOT_TOKEN` | Your bot token from @BotFather | ✅ |
    | `TELEGRAM_ADMIN_ID` | Your Telegram user ID | ✅ |
    | `DEFAULT_LLM_PROVIDER` | `gemini` or `anthropic` | ✅ |
-   | `GEMINI_API_KEY` | Your Gemini API key | Recommended |
-   | `ANTHROPIC_API_KEY` | Your Anthropic API key | Optional |
-
-   **Note:** Gemini is recommended as it supports embeddings for vector search.
+   | `GEMINI_API_KEY` | Your Gemini API key | If using Gemini |
+   | `ANTHROPIC_API_KEY` | Your Anthropic API key | If using Anthropic |
+   | `BRAVE_API_KEY` | Brave Search API key | For web search |
+   | `HA_URL` | Home Assistant URL (e.g., `http://192.168.1.100:8123`) | For home control |
+   | `HA_TOKEN` | Home Assistant long-lived access token | For home control |
 
 4. **Storage (Host Path Volumes):**
    | Container Path | Host Path | Mode |
@@ -78,6 +79,11 @@ Use `docker-compose.truenas.yml` from the repo:
    DEFAULT_LLM_PROVIDER=gemini
    GEMINI_API_KEY=your_gemini_api_key
    # Optional: ANTHROPIC_API_KEY=your_anthropic_key
+   
+   # Skill API keys (optional)
+   BRAVE_API_KEY=your_brave_api_key
+   HA_URL=http://192.168.1.100:8123
+   HA_TOKEN=your_home_assistant_token
    ```
 
 4. Deploy:
@@ -162,9 +168,8 @@ Add to `.vscode/launch.json`:
 
 ## LLM Providers
 
-### Gemini (Recommended)
-- Supports text generation and embeddings
-- Required for vector search functionality
+### Gemini
+- Supports text generation with native tool calling
 - Get API key: https://makersuite.google.com/app/apikey
 
 ```bash
@@ -174,15 +179,33 @@ DEFAULT_LLM_PROVIDER=gemini
 ```
 
 ### Anthropic Claude
-- Supports text generation only (no embeddings)
-- If using Anthropic as default, also set Gemini key for embeddings
+- Supports text generation with native tool calling
 
 ```bash
 ANTHROPIC_API_KEY=your_key
 ANTHROPIC_MODEL=claude-3-haiku-20240307
 DEFAULT_LLM_PROVIDER=anthropic
-# Still need Gemini for embeddings:
-GEMINI_API_KEY=your_gemini_key
+```
+
+---
+
+## Skill API Keys
+
+Skills like web search and home control need additional configuration:
+
+### Brave Search
+Get API key: https://brave.com/search/api/
+
+```bash
+BRAVE_API_KEY=your_brave_api_key
+```
+
+### Home Assistant
+Create a long-lived access token in HA: Profile → Long-Lived Access Tokens
+
+```bash
+HA_URL=http://your-home-assistant:8123
+HA_TOKEN=your_long_lived_access_token
 ```
 
 ---
