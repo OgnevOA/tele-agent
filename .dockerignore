@@ -1,0 +1,55 @@
+# Git
+.git
+.gitignore
+.github
+
+# Personality files (mount at runtime, don't bake into image)
+AGENTS.md
+SOUL.md
+IDENTITY.md
+USER.md
+TOOLS.md
+MEMORY.md
+BOOTSTRAP.md
+memory/
+
+# Documentation
+README.md
+DEPLOY.md
+*.md
+
+# Keep skills/*.md - they are the actual skill definitions
+!skills/*.md
+
+# Development
+scripts/
+*.log
+logs/
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment
+.env
+.env.*
+env.example
+
+# Local data (will be mounted)
+data/
+*.json
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Mac
+.DS_Store

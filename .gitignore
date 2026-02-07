@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.*
+!env.example
+
+# Personality files (private - don't commit to repo)
+SOUL.md
+IDENTITY.md
+USER.md
+TOOLS.md
+MEMORY.md
+BOOTSTRAP.md
+memory/
+
+# Personality directory (keep examples, ignore actual files)
+personality/*.md
+!personality/*.example
+
+# Local data
+data/
+logs/
+*.log
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local config files
+ha_devices.json

@@ -1,0 +1,23 @@
+# Your Environment
+
+Configure your AI's access to external services here.
+
+### Home Assistant
+HA_URL: http://your-home-assistant:8123/
+HA_TOKEN: your_long_lived_access_token
+
+### Smart Home Devices
+(List your devices with their entity IDs)
+
+#### Lights
+- **Living Room:** light.living_room
+- **Bedroom:** light.bedroom
+
+#### Switches
+- **Office Light:** switch.office_light
+
+#### Climate
+- **Main AC:** climate.main_ac
+
+### Other Integrations
+(Add any other service credentials your AI needs)
