@@ -47,17 +47,6 @@ class ToolDefinition:
             "description": self.description,
             "parameters": self.parameters,
         }
-    
-    def to_openai_format(self) -> dict:
-        """Convert to OpenAI/Ollama tool format."""
-        return {
-            "type": "function",
-            "function": {
-                "name": self.name,
-                "description": self.description,
-                "parameters": self.parameters,
-            },
-        }
 
 
 class LLMProvider(ABC):
@@ -66,7 +55,7 @@ class LLMProvider(ABC):
     @property
     @abstractmethod
     def name(self) -> str:
-        """Get the provider name (e.g., 'ollama', 'gemini', 'anthropic')."""
+        """Get the provider name (e.g., 'gemini', 'anthropic')."""
         ...
     
     @property
@@ -136,18 +125,6 @@ class LLMProvider(ABC):
         ...
     
     @abstractmethod
-    async def embed(self, text: str) -> list[float]:
-        """Generate embeddings for the given text.
-        
-        Args:
-            text: The text to embed.
-        
-        Returns:
-            List of floats representing the embedding vector.
-        """
-        ...
-    
-    @abstractmethod
     def is_available(self) -> bool:
         """Check if the provider is properly configured and available."""
         ...
@@ -155,10 +132,6 @@ class LLMProvider(ABC):
     def supports_tools(self) -> bool:
         """Check if this provider supports native tool/function calling."""
         return False
-    
-    def supports_embeddings(self) -> bool:
-        """Check if this provider supports embeddings natively."""
-        return True
     
     def supports_vision(self) -> bool:
         """Check if this provider supports image/vision input."""

@@ -8,9 +8,6 @@ python-dotenv>=1.0.0
 python-frontmatter>=1.0.0
 pyyaml>=6.0
 
-# Vector database
-chromadb>=0.4.0
-
 # State machine
 langgraph>=0.0.40
 

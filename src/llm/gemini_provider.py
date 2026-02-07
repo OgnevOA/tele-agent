@@ -22,7 +22,6 @@ class GeminiProvider(LLMProvider):
         self._model = model
         self._client = None
         self._client_with_tools = None
-        self._embed_model = None
     
     @property
     def name(self) -> str:
@@ -44,13 +43,6 @@ class GeminiProvider(LLMProvider):
         if self._client is None:
             self._client = genai.GenerativeModel(self._model)
         return self._client
-    
-    def _get_embed_model(self):
-        """Get embedding model."""
-        if self._embed_model is None:
-            # embedding-001 is the embedding model
-            self._embed_model = "models/embedding-001"
-        return self._embed_model
     
     def _prepare_messages(self, messages: list[dict]) -> tuple[str, list[dict]]:
         """Prepare messages for Gemini API.
@@ -298,31 +290,12 @@ class GeminiProvider(LLMProvider):
             logger.error(f"Gemini streaming error: {e}")
             raise
     
-    async def embed(self, text: str) -> list[float]:
-        """Generate embeddings using Gemini."""
-        import google.generativeai as genai
-        genai.configure(api_key=self._api_key)
-        
-        try:
-            result = genai.embed_content(
-                model=self._get_embed_model(),
-                content=text,
-                task_type="retrieval_document",
-            )
-            return result["embedding"]
-        except Exception as e:
-            logger.error(f"Gemini embedding error: {e}")
-            raise
-    
     def is_available(self) -> bool:
         """Check if Gemini is properly configured."""
         return bool(self._api_key)
     
     def supports_tools(self) -> bool:
         """Gemini supports native function calling."""
-        return True
-    
-    def supports_embeddings(self) -> bool:
         return True
     
     def supports_vision(self) -> bool:

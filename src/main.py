@@ -11,7 +11,6 @@ from src.config import config
 from src.bot import setup_handlers, setup_commands
 from src.core import PromptBuilder, ToolRegistry
 from src.llm import ProviderManager
-from src.retrieval import VectorStore
 from src.skills import SkillParser
 from src.scheduler import Scheduler, ScheduledJob
 
@@ -47,7 +46,6 @@ class TeleAgent:
         self.skill_parser = SkillParser(config.paths.skills_dir)
         self.tool_registry: ToolRegistry | None = None
         self.provider_manager: ProviderManager | None = None
-        self.vector_store: VectorStore | None = None
         self.scheduler: Scheduler | None = None
         self.app: Application | None = None
     
@@ -64,29 +62,17 @@ class TeleAgent:
         
         # Ensure directories exist
         self.config.paths.skills_dir.mkdir(parents=True, exist_ok=True)
-        self.config.paths.chroma_persist_dir.mkdir(parents=True, exist_ok=True)
         self.config.paths.state_file.parent.mkdir(parents=True, exist_ok=True)
         
         # Initialize provider manager
         self.provider_manager = ProviderManager(self.config)
         await self.provider_manager.initialize()
         
-        # Initialize vector store
-        self.vector_store = VectorStore(
-            persist_dir=self.config.paths.chroma_persist_dir,
-            embedding_provider=self.provider_manager.get_embedding_provider(),
-        )
-        await self.vector_store.initialize()
-        
         # Load skills and create tool registry
         skills = self.skill_parser.load_all_skills()
         self.tool_registry = ToolRegistry(self.skill_parser)
         tools = self.tool_registry.get_all_tool_definitions()
         logger.info(f"Loaded {len(skills)} skills, {len(tools)} tools registered")
-        
-        # Index skills in vector store (for RAG-based skill matching)
-        await self.vector_store.index_skills(skills)
-        logger.info(f"Indexed {len(skills)} skills in vector store")
         
         # Load system prompt
         system_prompt = self.prompt_builder.build_system_prompt()
@@ -104,7 +90,6 @@ class TeleAgent:
         self.app.bot_data["agent"] = self
         self.app.bot_data["config"] = self.config
         self.app.bot_data["provider_manager"] = self.provider_manager
-        self.app.bot_data["vector_store"] = self.vector_store
         self.app.bot_data["skill_parser"] = self.skill_parser
         self.app.bot_data["tool_registry"] = self.tool_registry
         self.app.bot_data["prompt_builder"] = self.prompt_builder
@@ -136,49 +121,41 @@ class TeleAgent:
             # Get provider
             provider = self.provider_manager.get_active()
             
-            # Process the task
-            if provider.supports_tools() and self.tool_registry:
-                tools = self.tool_registry.get_all_tool_definitions()
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": f"[SCHEDULED TASK] {job.task}"},
-                ]
+            # Process the task with tool calling
+            tools = self.tool_registry.get_all_tool_definitions()
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"[SCHEDULED TASK] {job.task}"},
+            ]
+            
+            from src.skills.executor import SkillExecutor
+            executor = SkillExecutor(timeout=60)
+            
+            # Generate with tools
+            result = await provider.generate_with_tools(
+                messages=messages,
+                tools=tools,
+                temperature=0.7,
+            )
+            
+            # Execute any tool calls
+            if result.has_tool_calls:
+                for tool_call in result.tool_calls:
+                    skill = self.skill_parser.get_skill(tool_call.name)
+                    if skill:
+                        exec_result = executor.execute(skill, tool_call.arguments)
+                        tool_output = str(exec_result.result) if exec_result.success else f"Error: {exec_result.error}"
+                        messages.append({"role": "assistant", "content": f"[Executed {tool_call.name}]"})
+                        messages.append({"role": "user", "content": f"Tool result: {tool_output}"})
                 
-                from src.skills.executor import SkillExecutor
-                executor = SkillExecutor(timeout=60)
-                
-                # Simple single-turn execution for scheduled tasks
+                # Get final response
                 result = await provider.generate_with_tools(
                     messages=messages,
                     tools=tools,
                     temperature=0.7,
                 )
-                
-                # Execute any tool calls
-                if result.has_tool_calls:
-                    for tool_call in result.tool_calls:
-                        skill = self.skill_parser.get_skill(tool_call.name)
-                        if skill:
-                            exec_result = executor.execute(skill, tool_call.arguments)
-                            tool_output = str(exec_result.result) if exec_result.success else f"Error: {exec_result.error}"
-                            messages.append({"role": "assistant", "content": f"[Executed {tool_call.name}]"})
-                            messages.append({"role": "user", "content": f"Tool result: {tool_output}"})
-                    
-                    # Get final response
-                    result = await provider.generate_with_tools(
-                        messages=messages,
-                        tools=tools,
-                        temperature=0.7,
-                    )
-                
-                response = result.text or "Task completed."
-            else:
-                # Simple generation without tools
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": f"[SCHEDULED TASK] {job.task}"},
-                ]
-                response = await provider.generate(messages)
+            
+            response = result.text or "Task completed."
             
             # Send result to admin
             await context.bot.send_message(

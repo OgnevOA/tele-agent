@@ -1,5 +1,3 @@
-"""Vector store and retrieval components."""
+"""Retrieval components (currently unused - skills use native tool calling)."""
 
-from .vectorstore import VectorStore
-
-__all__ = ["VectorStore"]
+__all__ = []

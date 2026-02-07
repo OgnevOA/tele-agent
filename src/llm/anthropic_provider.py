@@ -256,13 +256,6 @@ class AnthropicProvider(LLMProvider):
             logger.error(f"Anthropic streaming error: {e}")
             raise
     
-    async def embed(self, text: str) -> list[float]:
-        """Anthropic doesn't support embeddings - raise error."""
-        raise NotImplementedError(
-            "Anthropic does not support embeddings. "
-            "Use Gemini for embeddings."
-        )
-    
     def is_available(self) -> bool:
         """Check if Anthropic is properly configured."""
         return bool(self._api_key)
@@ -270,9 +263,6 @@ class AnthropicProvider(LLMProvider):
     def supports_tools(self) -> bool:
         """Anthropic Claude supports native tool calling."""
         return True
-    
-    def supports_embeddings(self) -> bool:
-        return False
     
     def supports_vision(self) -> bool:
         """Claude supports vision/image analysis."""

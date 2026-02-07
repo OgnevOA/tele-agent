@@ -150,7 +150,6 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     """Handle /status command - show system status."""
     agent = context.bot_data.get("agent")
     provider_manager = context.bot_data.get("provider_manager")
-    vector_store = context.bot_data.get("vector_store")
     skill_parser = context.bot_data.get("skill_parser")
     tool_registry = context.bot_data.get("tool_registry")
     prompt_builder = context.bot_data.get("prompt_builder")
@@ -158,19 +157,16 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     # Gather status info
     provider_name = "N/A"
     model_name = "N/A"
-    supports_tools = False
     if provider_manager:
         provider_name = provider_manager.active_provider.title()
         provider = provider_manager.get_active()
         model_name = provider.model_name
-        supports_tools = provider.supports_tools()
     
     skills_count = len(skill_parser.skills) if skill_parser else 0
     enabled_skills = sum(1 for s in skill_parser.skills.values() if s.enabled) if skill_parser else 0
     disabled_skills = skills_count - enabled_skills
     
     tools_count = len(tool_registry.get_all_tool_definitions()) if tool_registry else 0
-    embeddings_count = await vector_store.count() if vector_store else 0
     
     # Get identity if available
     identity = "Unknown"
@@ -181,16 +177,11 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     
     uptime = agent.uptime if agent else "N/A"
     
-    # Tool calling mode
-    mode = "Tool Calling" if supports_tools else "RAG Fallback"
-    
     status_text = (
         "🤖 **Tele-Agent Status**\n\n"
         f"Provider: {provider_name} ({model_name})\n"
-        f"Mode: {mode}\n"
         f"Skills: {enabled_skills} active, {disabled_skills} disabled\n"
         f"Tools: {tools_count} registered\n"
-        f"Vector DB: {embeddings_count} embeddings\n"
         f"Identity: {identity}\n"
         f"Uptime: {uptime}"
     )
@@ -202,7 +193,6 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def reload_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /reload command - reload skills and config."""
     skill_parser = context.bot_data.get("skill_parser")
-    vector_store = context.bot_data.get("vector_store")
     tool_registry = context.bot_data.get("tool_registry")
     prompt_builder = context.bot_data.get("prompt_builder")
     
@@ -210,11 +200,6 @@ async def reload_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         # Reload skills
         if skill_parser:
             skills = skill_parser.load_all_skills()
-            
-            # Re-index vector store
-            if vector_store:
-                await vector_store.clear()
-                await vector_store.index_skills(skills)
             
             # Refresh tool registry
             if tool_registry:

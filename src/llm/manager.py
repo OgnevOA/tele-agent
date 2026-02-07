@@ -2,7 +2,6 @@
 
 import logging
 import json
-from pathlib import Path
 from typing import Optional
 
 from src.config import Config
@@ -120,27 +119,6 @@ class ProviderManager:
         """Get the currently active provider."""
         return self.providers[self.active_provider]
     
-    def get_embedding_provider(self) -> LLMProvider:
-        """Get the provider to use for embeddings.
-        
-        Prefers Gemini since Anthropic doesn't support embeddings.
-        """
-        # Prefer the active provider if it supports embeddings
-        active = self.providers.get(self.active_provider)
-        if active and active.supports_embeddings():
-            return active
-        
-        # Fall back to Gemini for embeddings
-        gemini = self.providers.get("gemini")
-        if gemini:
-            return gemini
-        
-        # No embedding support available
-        raise ValueError(
-            "No embedding provider available. "
-            "Gemini is required for embeddings when using Anthropic."
-        )
-    
     def list_providers(self) -> list[dict]:
         """List all available providers with their status."""
         result = []
@@ -150,6 +128,5 @@ class ProviderManager:
                 "model": provider.model_name,
                 "available": provider.is_available(),
                 "active": name == self.active_provider,
-                "supports_embeddings": provider.supports_embeddings(),
             })
         return result

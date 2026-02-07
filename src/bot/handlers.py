@@ -344,7 +344,6 @@ async def process_message(
     tool_registry: ToolRegistry = context.bot_data.get("tool_registry")
     skill_parser = context.bot_data.get("skill_parser")
     prompt_builder = context.bot_data.get("prompt_builder")
-    vector_store = context.bot_data.get("vector_store")
     
     if not provider_manager:
         await update.message.reply_text("I'm still initializing. Please try again in a moment.")
@@ -372,10 +371,10 @@ async def process_message(
     try:
         async with typing_indicator(update.message.chat):
             await asyncio.wait_for(
-                _do_process_message(
+                handle_with_tool_calling(
                     update, context, message, system_prompt,
                     provider, tool_registry, skill_parser,
-                    prompt_builder, vector_store, image_data,
+                    image_data=image_data,
                 ),
                 timeout=PROCESSING_TIMEOUT,
             )
@@ -384,35 +383,6 @@ async def process_message(
         await update.message.reply_text(
             f"⏱️ Request timed out after {PROCESSING_TIMEOUT // 60} minutes. "
             "Please try a simpler request."
-        )
-
-
-async def _do_process_message(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-    message: str,
-    system_prompt: str,
-    provider,
-    tool_registry: Optional[ToolRegistry],
-    skill_parser,
-    prompt_builder,
-    vector_store,
-    image_data: Optional[tuple[bytes, str]],
-) -> None:
-    """Internal message processing logic."""
-    # Check if provider supports native tool calling
-    if provider.supports_tools() and tool_registry:
-        await handle_with_tool_calling(
-            update, context, message, system_prompt,
-            provider, tool_registry, skill_parser,
-            image_data=image_data,
-        )
-    else:
-        # Fall back to RAG-based skill matching
-        await handle_with_rag_fallback(
-            update, context, message, system_prompt,
-            provider, vector_store, skill_parser, prompt_builder,
-            image_data=image_data,
         )
 
 
@@ -470,7 +440,7 @@ async def handle_with_tool_calling(
 ) -> None:
     """Handle message using native LLM tool calling."""
     # Get all available tools
-    tools = tool_registry.get_all_tool_definitions()
+    tools = tool_registry.get_all_tool_definitions() if tool_registry else []
     
     # Get conversation history
     conversation = context.user_data.get("conversation", [])
@@ -645,71 +615,6 @@ def add_tool_result(
         })
 
 
-async def handle_with_rag_fallback(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-    message: str,
-    system_prompt: str,
-    provider,
-    vector_store,
-    skill_parser,
-    prompt_builder,
-    image_data: Optional[tuple[bytes, str]] = None,
-) -> None:
-    """Handle message using RAG-based skill matching (fallback)."""
-    executor = SkillExecutor(timeout=30)
-    conversation = context.user_data.get("conversation", [])
-    
-    # Search for matching skill
-    if vector_store:
-        matches = await vector_store.search(message, top_k=1)
-        
-        if matches and matches[0]["score"] >= 0.75:
-            # Good match - execute skill
-            match = matches[0]
-            skill = skill_parser.get_skill(match["name"])
-            
-            if skill:
-                # Extract arguments using LLM
-                args = await extract_arguments(message, skill.code, provider)
-                
-                logger.info(f"RAG executing skill: {skill.name} with args: {args}")
-                
-                # Execute
-                result = executor.execute(skill, args)
-                
-                if result.success:
-                    response = str(result.result)
-                    logger.info(f"RAG skill {skill.name} succeeded: {response[:200]}{'...' if len(response) > 200 else ''}")
-                else:
-                    response = f"Error: {result.error}"
-                    logger.error(f"RAG skill {skill.name} failed: {result.error}")
-                
-                # Update history
-                conversation.append({"role": "user", "content": message})
-                conversation.append({"role": "assistant", "content": response})
-                context.user_data["conversation"] = conversation[-20:]
-                save_conversation_history(conversation[-20:])
-                
-                await send_formatted(update, response, context)
-                return
-    
-    # No skill match - general conversation
-    messages = [{"role": "system", "content": system_prompt}]
-    messages.extend(conversation[-20:])
-    messages.append({"role": "user", "content": message})
-    
-    response = await provider.generate(messages)
-    
-    # Update history
-    conversation.append({"role": "user", "content": message})
-    conversation.append({"role": "assistant", "content": response})
-    context.user_data["conversation"] = conversation[-20:]
-    save_conversation_history(conversation[-20:])
-    
-    await send_formatted(update, response, context)
-
-
 async def handle_scheduler_confirmation(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -766,36 +671,6 @@ async def handle_scheduler_confirmation(
     except Exception as e:
         logger.error(f"Failed to parse scheduler confirmation: {e}")
         await update.message.reply_text(f"Error scheduling task: {e}")
-
-
-async def extract_arguments(message: str, code: str, provider) -> dict:
-    """Extract function arguments from user message using LLM."""
-    prompt = f"""Given this user message and Python function, extract the arguments as JSON.
-
-Message: "{message}"
-
-Function:
-```python
-{code}
-```
-
-Return only a JSON object with argument names and values. If not mentioned, omit the argument."""
-
-    try:
-        response = await provider.generate([
-            {"role": "system", "content": "Reply with only valid JSON, no explanation."},
-            {"role": "user", "content": prompt},
-        ])
-        
-        import json
-        response = response.strip()
-        if response.startswith("```"):
-            response = response.split("\n", 1)[1]
-        if response.endswith("```"):
-            response = response.rsplit("```", 1)[0]
-        return json.loads(response.strip())
-    except:
-        return {}
 
 
 def setup_handlers(app: Application) -> None:

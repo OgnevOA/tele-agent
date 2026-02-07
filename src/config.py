@@ -48,7 +48,6 @@ def _resolve_personality_file(env_key: str, filename: str) -> Path:
 class PathsConfig:
     """File system paths configuration."""
     skills_dir: Path = field(default_factory=lambda: Path(os.getenv("SKILLS_DIR", "./skills")))
-    chroma_persist_dir: Path = field(default_factory=lambda: Path(os.getenv("CHROMA_PERSIST_DIR", "./data/chroma")))
     state_file: Path = field(default_factory=lambda: Path(os.getenv("STATE_FILE", "./data/state.json")))
     
     # Behavior documents (can be mounted via env vars in container)
