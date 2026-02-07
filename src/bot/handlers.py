@@ -408,7 +408,7 @@ async def _do_process_message(
             image_data=image_data,
         )
     else:
-        # Fall back to RAG-based skill matching for Ollama
+        # Fall back to RAG-based skill matching
         await handle_with_rag_fallback(
             update, context, message, system_prompt,
             provider, vector_store, skill_parser, prompt_builder,
@@ -656,7 +656,7 @@ async def handle_with_rag_fallback(
     prompt_builder,
     image_data: Optional[tuple[bytes, str]] = None,
 ) -> None:
-    """Handle message using RAG-based skill matching (for Ollama)."""
+    """Handle message using RAG-based skill matching (fallback)."""
     executor = SkillExecutor(timeout=30)
     conversation = context.user_data.get("conversation", [])
     

@@ -48,7 +48,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "Tele-Agent Help\n\n"
         "Just send me a message and I'll try to help!\n\n"
         "Commands:\n"
-        "/model - Switch between Ollama, Gemini, and Anthropic\n"
+        "/model - Switch between Gemini and Anthropic\n"
         "/skills - View and manage available skills\n"
         "/status - Check system status\n"
         "/reload - Reload configuration and skills\n"

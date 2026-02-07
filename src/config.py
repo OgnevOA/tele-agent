@@ -17,14 +17,6 @@ class TelegramConfig:
 
 
 @dataclass
-class OllamaConfig:
-    """Ollama LLM configuration."""
-    base_url: str = field(default_factory=lambda: os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"))
-    model: str = field(default_factory=lambda: os.getenv("OLLAMA_MODEL", "llama3"))
-    embed_model: str = field(default_factory=lambda: os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text"))
-
-
-@dataclass
 class GeminiConfig:
     """Google Gemini configuration."""
     api_key: str = field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
@@ -70,11 +62,10 @@ class PathsConfig:
 class Config:
     """Main configuration container."""
     telegram: TelegramConfig = field(default_factory=TelegramConfig)
-    ollama: OllamaConfig = field(default_factory=OllamaConfig)
     gemini: GeminiConfig = field(default_factory=GeminiConfig)
     anthropic: AnthropicConfig = field(default_factory=AnthropicConfig)
     paths: PathsConfig = field(default_factory=PathsConfig)
-    default_provider: str = field(default_factory=lambda: os.getenv("DEFAULT_LLM_PROVIDER", "ollama"))
+    default_provider: str = field(default_factory=lambda: os.getenv("DEFAULT_LLM_PROVIDER", "gemini"))
     
     def validate(self) -> list[str]:
         """Validate configuration and return list of errors."""

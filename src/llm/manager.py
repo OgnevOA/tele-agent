@@ -7,7 +7,6 @@ from typing import Optional
 
 from src.config import Config
 from .base import LLMProvider
-from .ollama_provider import OllamaProvider
 from .gemini_provider import GeminiProvider
 from .anthropic_provider import AnthropicProvider
 
@@ -26,18 +25,10 @@ class ProviderManager:
         self.config = config
         self.providers: dict[str, LLMProvider] = {}
         self.active_provider: str = config.default_provider
-        self._embedding_provider: str = "ollama"  # Always use Ollama for embeddings
         self._state_file = config.paths.state_file
     
     async def initialize(self) -> None:
         """Initialize all configured providers."""
-        # Create Ollama provider (always available for local inference)
-        self.providers["ollama"] = OllamaProvider(
-            base_url=self.config.ollama.base_url,
-            model=self.config.ollama.model,
-            embed_model=self.config.ollama.embed_model,
-        )
-        
         # Create Gemini provider if configured
         if self.config.gemini.api_key:
             self.providers["gemini"] = GeminiProvider(
@@ -58,18 +49,19 @@ class ProviderManager:
         
         # Validate active provider exists
         if self.active_provider not in self.providers:
-            logger.warning(
-                f"Configured provider '{self.active_provider}' not available, "
-                f"falling back to 'ollama'"
-            )
-            self.active_provider = "ollama"
-        
-        # Check Ollama availability
-        ollama = self.providers.get("ollama")
-        if ollama:
-            available = await ollama.check_available_async()
-            if not available:
-                logger.warning("Ollama is not running - embeddings may not work")
+            # Try to fall back to any available provider
+            if self.providers:
+                fallback = next(iter(self.providers.keys()))
+                logger.warning(
+                    f"Configured provider '{self.active_provider}' not available, "
+                    f"falling back to '{fallback}'"
+                )
+                self.active_provider = fallback
+            else:
+                raise ValueError(
+                    "No LLM providers configured. "
+                    "Please set GEMINI_API_KEY or ANTHROPIC_API_KEY."
+                )
         
         logger.info(f"Initialized providers: {list(self.providers.keys())}")
         logger.info(f"Active provider: {self.active_provider}")
@@ -131,16 +123,23 @@ class ProviderManager:
     def get_embedding_provider(self) -> LLMProvider:
         """Get the provider to use for embeddings.
         
-        Always returns Ollama for consistency, since Anthropic
-        doesn't support embeddings.
+        Prefers Gemini since Anthropic doesn't support embeddings.
         """
         # Prefer the active provider if it supports embeddings
         active = self.providers.get(self.active_provider)
         if active and active.supports_embeddings():
             return active
         
-        # Fall back to Ollama
-        return self.providers.get("ollama", active)
+        # Fall back to Gemini for embeddings
+        gemini = self.providers.get("gemini")
+        if gemini:
+            return gemini
+        
+        # No embedding support available
+        raise ValueError(
+            "No embedding provider available. "
+            "Gemini is required for embeddings when using Anthropic."
+        )
     
     def list_providers(self) -> list[dict]:
         """List all available providers with their status."""

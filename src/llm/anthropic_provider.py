@@ -260,7 +260,7 @@ class AnthropicProvider(LLMProvider):
         """Anthropic doesn't support embeddings - raise error."""
         raise NotImplementedError(
             "Anthropic does not support embeddings. "
-            "Use Ollama or Gemini for embeddings."
+            "Use Gemini for embeddings."
         )
     
     def is_available(self) -> bool:

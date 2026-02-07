@@ -84,7 +84,7 @@ class TeleAgent:
         tools = self.tool_registry.get_all_tool_definitions()
         logger.info(f"Loaded {len(skills)} skills, {len(tools)} tools registered")
         
-        # Index skills in vector store (for RAG fallback with Ollama)
+        # Index skills in vector store (for RAG-based skill matching)
         await self.vector_store.index_skills(skills)
         logger.info(f"Indexed {len(skills)} skills in vector store")
         
@@ -173,7 +173,7 @@ class TeleAgent:
                 
                 response = result.text or "Task completed."
             else:
-                # Simple generation for Ollama
+                # Simple generation without tools
                 messages = [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": f"[SCHEDULED TASK] {job.task}"},

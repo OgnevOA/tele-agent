@@ -30,17 +30,7 @@ pip install -r requirements.txt
 if (-not (Test-Path ".env")) {
     Write-Host "Creating .env from template..." -ForegroundColor Yellow
     Copy-Item env.example .env
-    Write-Host "! Edit .env with your TELEGRAM_BOT_TOKEN and TELEGRAM_ADMIN_ID" -ForegroundColor Magenta
-}
-
-# Check Ollama
-$ollamaRunning = $false
-try {
-    $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -TimeoutSec 2 -ErrorAction SilentlyContinue
-    $ollamaRunning = $true
-    Write-Host "✓ Ollama is running" -ForegroundColor Green
-} catch {
-    Write-Host "! Ollama not detected. Start it with: ollama run llama3" -ForegroundColor Yellow
+    Write-Host "! Edit .env with your TELEGRAM_BOT_TOKEN, TELEGRAM_ADMIN_ID, and API keys" -ForegroundColor Magenta
 }
 
 Write-Host ""
@@ -48,6 +38,6 @@ Write-Host "Setup complete!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "  1. Edit .env with your Telegram credentials"
-Write-Host "  2. Start Ollama: ollama run llama3"
+Write-Host "  2. Add your API key (GEMINI_API_KEY or ANTHROPIC_API_KEY)"
 Write-Host "  3. Run bot: python -m src.main"
 Write-Host "  4. Or press F5 in VS Code/Cursor to debug"

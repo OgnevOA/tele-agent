@@ -1,21 +1,22 @@
 # Tele-Agent
 
-A self-hosted personal assistant accessed via Telegram with local LLM inference, skill-based architecture, and interactive learning capabilities.
+A self-hosted personal assistant accessed via Telegram with cloud LLM inference, skill-based architecture, and interactive learning capabilities.
 
 ## Features
 
-- **Multi-Provider LLM Support**: Switch between Ollama (local), Google Gemini, and Anthropic Claude
+- **Multi-Provider LLM Support**: Switch between Google Gemini and Anthropic Claude
 - **Skill-Based Architecture**: Modular skills stored as Markdown files
 - **Semantic Search**: ChromaDB-powered skill matching
 - **Interactive Learning**: Teach the agent new skills through conversation
 - **Personality System**: Customizable agent behavior via SOUL.md, IDENTITY.md, etc.
+- **Vision Support**: Send images for analysis (Gemini and Claude)
 
 ## Quick Start
 
 ### Prerequisites
 
 - Python 3.11+
-- [Ollama](https://ollama.ai/) (for local LLM inference)
+- Gemini API key (recommended) or Anthropic API key
 - Telegram Bot Token (from [@BotFather](https://t.me/botfather))
 
 ### Windows Development
@@ -30,9 +31,6 @@ python -m venv venv
 pip install -r requirements.txt
 Copy-Item env.example .env
 # Edit .env with your settings
-
-# Start Ollama
-ollama run llama3
 
 # Run the bot
 python -m src.main
@@ -62,18 +60,17 @@ TELEGRAM_BOT_TOKEN=your_bot_token
 TELEGRAM_ADMIN_ID=your_telegram_user_id
 
 # LLM Providers (configure at least one)
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama3
-
 GEMINI_API_KEY=your_key
 GEMINI_MODEL=gemini-1.5-flash
 
 ANTHROPIC_API_KEY=your_key
 ANTHROPIC_MODEL=claude-3-haiku-20240307
 
-# Default provider
-DEFAULT_LLM_PROVIDER=ollama
+# Default provider (gemini or anthropic)
+DEFAULT_LLM_PROVIDER=gemini
 ```
+
+**Note:** Gemini is recommended as the default provider because it supports embeddings for vector search.
 
 ## Telegram Commands
 
@@ -85,6 +82,8 @@ DEFAULT_LLM_PROVIDER=ollama
 | `/skills` | Manage skills |
 | `/status` | System status |
 | `/reload` | Reload skills and config |
+| `/usage` | View Anthropic token usage |
+| `/jobs` | View scheduled tasks |
 
 ## Skills
 
@@ -132,8 +131,9 @@ src/
 ├── config.py         # Configuration
 ├── bot/              # Telegram handlers
 ├── core/             # LangGraph state machine
-├── llm/              # LLM providers
+├── llm/              # LLM providers (Gemini, Anthropic)
 ├── skills/           # Skill parser/executor
+├── scheduler/        # Cron-based task scheduling
 └── retrieval/        # ChromaDB vector store
 ```
 

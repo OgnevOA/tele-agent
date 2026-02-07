@@ -41,11 +41,11 @@ The container image is automatically built and pushed to GitHub Container Regist
    |----------|-------|----------|
    | `TELEGRAM_BOT_TOKEN` | Your bot token from @BotFather | ✅ |
    | `TELEGRAM_ADMIN_ID` | Your Telegram user ID | ✅ |
-   | `DEFAULT_LLM_PROVIDER` | `ollama`, `gemini`, or `anthropic` | ✅ |
-   | `OLLAMA_BASE_URL` | `http://192.168.1.x:11434` | If using Ollama |
-   | `OLLAMA_MODEL` | `llama3` | If using Ollama |
-   | `GEMINI_API_KEY` | Your Gemini API key | If using Gemini |
-   | `ANTHROPIC_API_KEY` | Your Anthropic API key | If using Anthropic |
+   | `DEFAULT_LLM_PROVIDER` | `gemini` or `anthropic` | ✅ |
+   | `GEMINI_API_KEY` | Your Gemini API key | Recommended |
+   | `ANTHROPIC_API_KEY` | Your Anthropic API key | Optional |
+
+   **Note:** Gemini is recommended as it supports embeddings for vector search.
 
 4. **Storage (Host Path Volumes):**
    | Container Path | Host Path | Mode |
@@ -69,15 +69,15 @@ Use `docker-compose.truenas.yml` from the repo:
    ```
 
 2. Edit the compose file:
-   - Update `image:` with your actual GHCR image path
    - Adjust volume paths for your pool
 
 3. Create `.env` file:
    ```bash
    TELEGRAM_BOT_TOKEN=your_token_here
    TELEGRAM_ADMIN_ID=123456789
-   DEFAULT_LLM_PROVIDER=ollama
-   OLLAMA_BASE_URL=http://192.168.1.100:11434
+   DEFAULT_LLM_PROVIDER=gemini
+   GEMINI_API_KEY=your_gemini_api_key
+   # Optional: ANTHROPIC_API_KEY=your_anthropic_key
    ```
 
 4. Deploy:
@@ -113,7 +113,7 @@ Go to **Actions** → **Build and Push Docker Image** → **Run workflow**
 
 ### Prerequisites
 - Python 3.11+
-- Ollama installed and running
+- Gemini API key (or Anthropic API key)
 
 ### Setup
 
@@ -127,18 +127,13 @@ Go to **Actions** → **Build and Push Docker Image** → **Run workflow**
 2. Create `.env` file:
    ```powershell
    Copy-Item env.example .env
-   # Edit .env with your settings
+   # Edit .env with your API keys
    ```
 
 3. Create personality files in project root:
    - `SOUL.md`, `IDENTITY.md`, `USER.md`, `TOOLS.md`
 
-4. Start Ollama:
-   ```powershell
-   ollama run llama3
-   ```
-
-5. Run the bot:
+4. Run the bot:
    ```powershell
    python -m src.main
    ```
@@ -165,32 +160,29 @@ Add to `.vscode/launch.json`:
 
 ---
 
-## Connecting to Ollama
+## LLM Providers
 
-### Ollama on TrueNAS Host
+### Gemini (Recommended)
+- Supports text generation and embeddings
+- Required for vector search functionality
+- Get API key: https://makersuite.google.com/app/apikey
+
 ```bash
-OLLAMA_BASE_URL=http://host.docker.internal:11434
-# or use TrueNAS IP directly:
-OLLAMA_BASE_URL=http://192.168.1.100:11434
+GEMINI_API_KEY=your_key
+GEMINI_MODEL=gemini-1.5-flash
+DEFAULT_LLM_PROVIDER=gemini
 ```
 
-### Ollama as Container (same compose)
-```yaml
-services:
-  ollama:
-    image: ollama/ollama
-    container_name: ollama
-    volumes:
-      - /mnt/pool/apps/ollama:/root/.ollama
-    ports:
-      - "11434:11434"
+### Anthropic Claude
+- Supports text generation only (no embeddings)
+- If using Anthropic as default, also set Gemini key for embeddings
 
-  tele-agent:
-    # ...
-    environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
-    depends_on:
-      - ollama
+```bash
+ANTHROPIC_API_KEY=your_key
+ANTHROPIC_MODEL=claude-3-haiku-20240307
+DEFAULT_LLM_PROVIDER=anthropic
+# Still need Gemini for embeddings:
+GEMINI_API_KEY=your_gemini_key
 ```
 
 ---
@@ -225,10 +217,9 @@ docker-compose up -d
 - Check `/app/personality` mount contains your .md files
 - Verify file permissions (readable by container)
 
-### Ollama connection failed
-- Ensure Ollama is running: `curl http://localhost:11434/api/tags`
-- Check firewall allows port 11434
-- For containers, ensure proper networking
+### API errors
+- Verify your API keys are valid
+- Check API quotas/limits on provider dashboards
 
 ### Skills not loading
 - Check `/app/skills` volume mount
