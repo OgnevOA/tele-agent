@@ -4,7 +4,7 @@
 
 The container image is automatically built and pushed to GitHub Container Registry via GitHub Actions.
 
-**Image:** `ghcr.io/YOUR_USERNAME/tele-agent:latest`
+**Image:** `ghcr.io/ognevoa/tele-agent:latest`
 
 ### Prerequisites on TrueNAS
 
@@ -33,7 +33,7 @@ The container image is automatically built and pushed to GitHub Container Regist
 
 2. **Basic Configuration:**
    - Application Name: `tele-agent`
-   - Image Repository: `ghcr.io/YOUR_USERNAME/tele-agent`
+   - Image Repository: `ghcr.io/ognevoa/tele-agent`
    - Image Tag: `latest`
 
 3. **Environment Variables:**
@@ -202,7 +202,7 @@ The container auto-updates if you use `:latest` tag with Watchtower or similar.
 
 Or manually:
 ```bash
-docker pull ghcr.io/YOUR_USERNAME/tele-agent:latest
+docker pull ghcr.io/ognevoa/tele-agent:latest
 docker-compose up -d
 ```
 

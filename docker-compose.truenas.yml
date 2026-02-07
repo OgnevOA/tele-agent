@@ -17,8 +17,7 @@ version: "3.8"
 
 services:
   tele-agent:
-    # Update with your actual GitHub username/repo
-    image: ghcr.io/GITHUB_USERNAME/tele-agent:latest
+    image: ghcr.io/ognevoa/tele-agent:latest
     container_name: tele-agent
     restart: unless-stopped
     

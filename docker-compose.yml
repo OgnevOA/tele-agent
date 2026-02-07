@@ -11,7 +11,7 @@ version: "3.8"
 services:
   tele-agent:
     # Option 1: Use pre-built image from GitHub Container Registry
-    # image: ghcr.io/GITHUB_USERNAME/tele-agent:latest
+    # image: ghcr.io/ognevoa/tele-agent:latest
     
     # Option 2: Build locally (default for development)
     build: .
